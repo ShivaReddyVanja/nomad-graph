@@ -64,6 +64,10 @@ class FullItinerary(BaseModel):
 
     
 
+class DestinationAllocation(BaseModel):
+    destination: str = Field(..., description="Name of the city or destination")
+    duration_days: int = Field(..., description="Number of days allocated to this destination")
+
 class AgentState(TypedDict):
     user_prompt:str
     parsed_parameters: Dict[str,Any]
@@ -71,6 +75,7 @@ class AgentState(TypedDict):
     clarification_response: Dict[str,str]
     is_validated: bool
 
+    planned_destinations: List[DestinationAllocation]
     transit:List[TransitOption]
     accommodation:List[Place]
     food:List[Place]

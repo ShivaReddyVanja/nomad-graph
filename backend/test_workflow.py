@@ -14,7 +14,8 @@ def run_test():
         "transit": [],
         "accommodation": [],
         "food": [],
-        "activities": []
+        "activities": [],
+        "planned_destinations": []
     }
 
     print("=== Executing Workflow with Complete Input ===")
@@ -52,7 +53,8 @@ def run_test():
         "transit": [],
         "accommodation": [],
         "food": [],
-        "activities": []
+        "activities": [],
+        "planned_destinations": []
     }
 
     print("=== Executing Workflow with Incomplete Input ===")

@@ -119,11 +119,29 @@ Instructions:
 
 CAPTAIN_COMPILATION_SUB_PROMPT = """TASK: Final Itinerary Compilation & Guardrail Verification (Phase 5)
 Instructions:
-1. Take the selected accommodation, transit, food, and activities and sequence them chronologically for each day.
+1. Take the selected accommodations, transit options, food, and activities and sequence them chronologically for each day across all planned destinations.
 2. Construct each day's plan schedule. You MUST alternate places and transits: Place (Hotel) -> Transit -> Place (Sight) -> Transit -> Place (Lunch) -> Transit -> Place (Sight) -> Transit -> Place (Dinner) -> Transit -> Place (Hotel).
-3. Estimate transition times between locations using coordinates (e.g., speed assumptions: walking ~4 km/h, driving ~30 km/h in cities).
-4. Perform strict validation checks:
+3. If the plan shifts to a new destination on a given day:
+   - Schedule a Check-out Place (Hotel) -> Transit (Inter-city flight/train/drive) -> Check-in Place (New Hotel) -> Sights/Food in the new destination.
+4. Estimate transition times between locations using coordinates (e.g., speed assumptions: walking ~4 km/h, driving ~30 km/h in cities).
+5. Perform strict validation checks:
    - Check if an activity's scheduled visit time conflicts with its opening/closing hours.
    - Check if the travel time budgeted between consecutive places is physically possible.
-5. If any check fails, append a warning string to `validation_warnings` (e.g. "Warning: Driving from Spot A to Spot B takes 45 mins, but only 15 mins scheduled") but compile the itinerary anyway.
+6. If any check fails, append a warning string to `validation_warnings` (e.g. "Warning: Driving from Spot A to Spot B takes 45 mins, but only 15 mins scheduled") but compile the itinerary anyway.
+"""
+
+# =====================================================================
+# 4. PLANNER PROMPTS
+# =====================================================================
+
+PLANNER_SYSTEM_PROMPT = """You are the Destination Planner for a multi-agent travel planner.
+Your role is to evaluate the validated travel region/destination and the user's travel theme/style.
+Your duty is to break down a broad destination or region (e.g. 'North India', 'Kerala', 'Western Europe') into a list of specific, logically ordered destinations/cities to visit (e.g. 'Delhi', 'Manali', 'Ladakh' for North India; or 'Kochi', 'Munnar', 'Alleppey' for Kerala).
+
+CRITICAL RULES:
+1. Select a set of destinations that fit the user's travel theme (e.g. adventure, relaxation, culture) and duration.
+2. The ordered list of destinations must follow a logical geographical routing sequence (e.g. Kochi -> Munnar -> Alleppey).
+3. Allocate the total travel duration (duration_days) across these destinations. The sum of duration_days of all allocated destinations MUST exactly equal the user's requested trip duration.
+4. If the destination requested by the user is a single specific city (e.g., 'Paris' or 'Rome'), return that single city as the only destination and allocate all duration_days to it.
+5. Provide a refined theme statement summarizing the journey.
 """

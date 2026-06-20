@@ -33,7 +33,8 @@ def run_interactive_planner():
         "transit": [],
         "accommodation": [],
         "food": [],
-        "activities": []
+        "activities": [],
+        "planned_destinations": []
     }
 
     print("\nStarting travel planning execution thread...")
