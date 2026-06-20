@@ -1,0 +1,46 @@
+# Python virtual environment
+venv/
+ENV/
+env/
+.venv/
+backend/venv/
+
+# Environment secrets
+.env
+.env.*
+!.env.example
+backend/.env
+backend/.env.*
+
+# Python cache and compiled files
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Node/JavaScript dependencies
+node_modules/
+frontend/node_modules/
+
+# Frontend builds
+dist/
+build/
+.next/
+out/
+frontend/dist/
+frontend/build/
+frontend/.next/
+frontend/out/
+
+# OS metadata
+.DS_Store
+Thumbs.db
+
+# IDE settings
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
