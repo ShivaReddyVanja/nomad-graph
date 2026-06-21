@@ -9,9 +9,14 @@ class SessionQueueManager:
     """
     def __init__(self):
         self.queues: Dict[str, asyncio.Queue] = {}
+        self.loop: Optional[asyncio.AbstractEventLoop] = None
 
     def register(self, thread_id: str) -> asyncio.Queue:
-        """Registers a new queue for a thread_id."""
+        """Registers a new queue for a thread_id and captures the running event loop."""
+        try:
+            self.loop = asyncio.get_running_loop()
+        except RuntimeError:
+            pass
         queue = asyncio.Queue()
         self.queues[thread_id] = queue
         return queue
@@ -30,13 +35,9 @@ class SessionQueueManager:
         print(message, flush=True)
         queue = self.get_queue(thread_id)
         if queue:
-            try:
-                loop = asyncio.get_running_loop()
-                # Use call_soon_threadsafe to allow pushing logs from synchronous worker threads safely
-                loop.call_soon_threadsafe(queue.put_nowait, message)
-            except RuntimeError:
-                # If there's no active event loop (e.g. running in simple sync script)
-                pass
+            # Thread-safely push log message to main event loop queue if it is running
+            if self.loop and self.loop.is_running():
+                self.loop.call_soon_threadsafe(queue.put_nowait, message)
 
 # Global logger instance
 session_logger = SessionQueueManager()
