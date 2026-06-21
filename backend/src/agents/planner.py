@@ -5,7 +5,7 @@ from src.graph.state import AgentState, DestinationAllocation
 from src.agents.base import generate_structured_output
 from src.agents.prompts import PLANNER_SYSTEM_PROMPT
 from langchain_core.runnables import RunnableConfig
-from src.utils.logger import log_agent
+from src.utils.logger import log_agent, log_dev
 
 # 1. Output Schemas for the Planner ReAct step
 class SearchAction(BaseModel):
@@ -35,7 +35,8 @@ def planner_node(state: AgentState, config: RunnableConfig) -> Dict[str, Any]:
     theme = params.get("theme", "")
     style = params.get("travel_style", [])
 
-    log_agent(config, f"\n[Planner Agent] Starting planning node for region: '{destination}' ({duration_days} days, theme: {theme})...")
+    log_agent(config, "Determining the best routing and destination breakdown...")
+    log_dev(config, f"[Planner Agent] Starting planning node for region: '{destination}' ({duration_days} days, theme: {theme})...")
 
     # If it's a specific single city (e.g. Paris, Goa, Delhi, Tokyo, Rome, etc.), bypass the search loop
     # and directly allocate the entire duration to that single destination.
@@ -45,7 +46,7 @@ def planner_node(state: AgentState, config: RunnableConfig) -> Dict[str, Any]:
     search_history = []
     
     for iteration in range(5):
-        log_agent(config, f"[Planner Agent] ReAct Loop Iteration {iteration + 1}/5...")
+        log_dev(config, f"[Planner Agent] ReAct Loop Iteration {iteration + 1}/5...")
         
         # 1. Build context from search history
         history_context = ""
@@ -63,23 +64,32 @@ def planner_node(state: AgentState, config: RunnableConfig) -> Dict[str, Any]:
             f"Decide whether you need to run a Google search to find specific cities/routes/times, or if you can compile the final plan now."
         )
 
+        import time
+        llm_start = time.perf_counter()
         try:
             step = generate_structured_output(
                 system_prompt=PLANNER_SYSTEM_PROMPT,
                 user_prompt=user_prompt,
                 output_schema=PlannerStep
             )
+            log_dur = time.perf_counter() - llm_start
+            log_dev(config, f"[Latency Metric] Planner ReAct step LLM call: {log_dur:.2f}s")
         except Exception as e:
-            log_agent(config, f"[Planner Agent] LLM generation failed: {e}. Falling back to default single destination.")
+            log_dev(config, f"[Planner Agent] LLM generation failed: {e}. Falling back to default single destination.")
             break
 
-        log_agent(config, f"[Planner Agent] Reasoning: {step.reasoning}")
+        log_dev(config, f"[Planner Agent] Reasoning: {step.reasoning}")
 
         # 3. Handle Google Search Action
         if step.action and not step.final_plan:
             query = step.action.query
-            log_agent(config, f"[Planner Agent] Action: Querying Google Search for: '{query}'...")
+            log_agent(config, "Researching routes and local details...")
+            log_dev(config, f"[Planner Agent] Action: Querying Google Search for: '{query}'...")
+            import time
+            search_start = time.perf_counter()
             search_results = google_search_snippets(query)
+            search_dur = time.perf_counter() - search_start
+            log_dev(config, f"[Latency Metric] Google search query: {search_dur:.2f}s")
             search_history.append({
                 "query": query,
                 "result": search_results
@@ -92,14 +102,17 @@ def planner_node(state: AgentState, config: RunnableConfig) -> Dict[str, Any]:
             # Verify that the allocated duration sums up to the user's duration_days
             total_allocated = sum(dest.duration_days for dest in plan.ordered_destinations)
             if total_allocated != duration_days:
-                log_agent(config, f"[Planner Agent] Warning: LLM allocated {total_allocated} days but user requested {duration_days} days. Adjusting the last destination to fit.")
+                log_dev(config, f"[Planner Agent] Warning: LLM allocated {total_allocated} days but user requested {duration_days} days. Adjusting the last destination to fit.")
                 # Automatically adjust the last destination's duration to satisfy the constraint
                 diff = duration_days - sum(dest.duration_days for dest in plan.ordered_destinations[:-1])
                 if len(plan.ordered_destinations) > 0:
                     plan.ordered_destinations[-1].duration_days = max(1, diff)
 
-            log_agent(config, f"[Planner Agent] Planning Finalized! Destinations: {[d.destination for d in plan.ordered_destinations]} (Total Days: {duration_days})")
-            log_agent(config, f"[Planner Agent] Explanation: {plan.explanation}")
+            log_agent(config, "Routing finalized! Planned destination breakdown:")
+            for dest in plan.ordered_destinations:
+                log_agent(config, f"  • {dest.destination} ({dest.duration_days} days)")
+            log_dev(config, f"[Planner Agent] Planning Finalized! Destinations: {[d.destination for d in plan.ordered_destinations]} (Total Days: {duration_days})")
+            log_dev(config, f"[Planner Agent] Explanation: {plan.explanation}")
             
             # Update the theme in parsed parameters if a refined one is suggested
             refined_params = {**params}
@@ -111,8 +124,8 @@ def planner_node(state: AgentState, config: RunnableConfig) -> Dict[str, Any]:
                 "parsed_parameters": refined_params
             }
 
-    # Fallback to single destination if loop completes without a final plan
-    log_agent(config, f"[Planner Agent] ReAct loop completed without final plan. Defaulting to single destination: '{destination}'")
+    log_agent(config, f"Routing finalized! Planned destination breakdown:\n  • {destination} ({duration_days} days)")
+    log_dev(config, f"[Planner Agent] ReAct loop completed without final plan. Defaulting to single destination: '{destination}'")
     default_allocations = [DestinationAllocation(destination=destination, duration_days=duration_days)]
     return {
         "planned_destinations": default_allocations

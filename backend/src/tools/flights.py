@@ -15,14 +15,36 @@ from src.tools.search_helper import search_and_extract_fact
 class AirportCodeResolution(BaseModel):
     iata_code: str = Field(..., description="The 3-letter IATA airport code for the location.")
 
+# Simple in-memory cache for resolved city IATA airport codes
+_AIRPORT_CODE_CACHE = {
+    "hyderabad": "HYD",
+    "delhi": "DEL",
+    "mumbai": "BOM",
+    "bangalore": "BLR",
+    "rome": "FCO",
+    "paris": "CDG",
+    "london": "LHR",
+    "new york": "JFK",
+    "tokyo": "HND",
+    "goa": "GOI",
+}
+
 def get_airport_code(city_name: str, default: str = "DEL") -> str:
     """
     Dynamically resolves a city or region name to its primary 3-letter IATA airport code
     by searching Google (via SerpAPI) and extracting the fact using the LLM.
+    Uses _AIRPORT_CODE_CACHE to bypass remote searches/extractions.
     """
     if not city_name:
         return default
         
+    city_key = city_name.strip().lower()
+    if city_key in _AIRPORT_CODE_CACHE:
+        print(f"[Flights Tool] Airport code cache hit for '{city_name}': {_AIRPORT_CODE_CACHE[city_key]}", flush=True)
+        return _AIRPORT_CODE_CACHE[city_key]
+        
+    import time
+    start_time = time.perf_counter()
     try:
         query = f"primary 3 letter IATA airport code for {city_name}"
         system_prompt = (
@@ -39,10 +61,14 @@ def get_airport_code(city_name: str, default: str = "DEL") -> str:
             output_schema=AirportCodeResolution
         )
         code = result.iata_code.strip().upper()
+        dur = time.perf_counter() - start_time
+        print(f"[Latency Metric] Resolving airport code for '{city_name}' (miss): {dur:.2f}s", flush=True)
+        
         if len(code) == 3 and code.isalpha():
+            _AIRPORT_CODE_CACHE[city_key] = code
             return code
     except Exception as e:
-        print(f"[Flights Tool] Dynamic airport code search failed for '{city_name}': {e}. Using default.")
+        print(f"[Flights Tool] Dynamic airport code search failed for '{city_name}': {e}. Using default.", flush=True)
         
     return default
 

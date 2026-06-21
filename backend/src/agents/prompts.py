@@ -128,6 +128,7 @@ Instructions:
    - Check if an activity's scheduled visit time conflicts with its opening/closing hours.
    - Check if the travel time budgeted between consecutive places is physically possible.
 6. If any check fails, append a warning string to `validation_warnings` (e.g. "Warning: Driving from Spot A to Spot B takes 45 mins, but only 15 mins scheduled") but compile the itinerary anyway.
+7. CRITICAL: Under the `id` field in the schedule, you MUST ONLY use the exact `id` strings from the provided Transit, Accommodation, Food, and Sightseeing/Activity Candidate lists. NEVER invent or hallucinate new IDs (such as "simulated_arrival", "transit_day1", "local_cafe_lunch", etc.). Every item in the schedule must match a real candidate ID.
 """
 
 # =====================================================================

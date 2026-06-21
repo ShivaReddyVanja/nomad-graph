@@ -53,3 +53,15 @@ def log_agent(config: Optional[Any], message: str):
     elif hasattr(config, "configurable"):
         thread_id = config.configurable.get("thread_id", "default")
     session_logger.log(thread_id, message)
+
+def log_dev(config: Optional[Any], message: str):
+    """
+    Helper function to log technical/developer details (e.g. latency metrics, debug loops)
+    to the server console only. Bypasses the client-facing SSE queue.
+    """
+    thread_id = "default"
+    if isinstance(config, dict):
+        thread_id = config.get("configurable", {}).get("thread_id", "default")
+    elif hasattr(config, "configurable"):
+        thread_id = config.configurable.get("thread_id", "default")
+    print(f"[Dev Log] [{thread_id}] {message}", flush=True)

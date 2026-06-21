@@ -7,7 +7,7 @@ from src.agents.prompts import GATEKEEPER_SYSTEM_PROMPT
 from langgraph.types import interrupt
 
 from langchain_core.runnables import RunnableConfig
-from src.utils.logger import log_agent
+from src.utils.logger import log_agent, log_dev
 
 # Pydantic schema for structured output extraction
 class GatekeeperExtraction(BaseModel):
@@ -42,7 +42,8 @@ def gatekeeper_node(state: AgentState, config: RunnableConfig) -> Dict[str, Any]
     system_prompt = GATEKEEPER_SYSTEM_PROMPT.format(current_date=current_date)
     
     while True:
-        log_agent(config, f"[Gatekeeper Node Execution] Checking validation... Active responses: {clarification_response}")
+        log_agent(config, "Reviewing your travel details...")
+        log_dev(config, f"[Gatekeeper Node Execution] Checking validation... Active responses: {clarification_response}")
         
         # 2. Format the clarification responses string
         if clarification_response:
@@ -59,15 +60,20 @@ def gatekeeper_node(state: AgentState, config: RunnableConfig) -> Dict[str, Any]
         )
         
         # 4. Invoke Gemini with Gatekeeper extraction schema
+        import time
+        t_start = time.perf_counter()
         extraction = generate_structured_output(
             system_prompt=system_prompt,
             user_prompt=user_prompt,
             output_schema=GatekeeperExtraction
         )
+        t_dur = time.perf_counter() - t_start
+        log_dev(config, f"[Latency Metric] Gatekeeper extraction: {t_dur:.2f}s")
         
         # 5. If validated, compile parameters and break loop to proceed to Captain
         if extraction.is_validated:
-            log_agent(config, "[Gatekeeper Node Execution] Validation Successful! Routing to Captain.")
+            log_agent(config, "Got all details! Let me start planning your trip...")
+            log_dev(config, "[Gatekeeper Node Execution] Validation Successful! Routing to Captain.")
             # 5. Prepare parsed parameters for state updates
             parsed_params = {
                 "origin": extraction.origin,
@@ -85,12 +91,10 @@ def gatekeeper_node(state: AgentState, config: RunnableConfig) -> Dict[str, Any]
                 "clarification_response": clarification_response
             }
             
-        # 6. If validation fails, trigger LangGraph interrupt to pause execution.
-        # This halts execution and returns the list of questions to the caller.
-        # When the graph is resumed, `interrupt()` returns the user's answers.
-        log_agent(config, f"[Gatekeeper Node Execution] Validation Failed. Pausing graph to ask: {extraction.clarification_questions}")
+        log_agent(config, "I need a few more details to plan your perfect trip...")
+        log_dev(config, f"[Gatekeeper Node Execution] Validation Failed. Pausing graph to ask: {extraction.clarification_questions}")
         user_answers = interrupt(extraction.clarification_questions)
         
         # 7. Merge the user responses (dictionary: {question: answer}) and repeat loop
-        log_agent(config, f"[Gatekeeper Node Execution] Resumed. Received user answers: {user_answers}")
+        log_dev(config, f"[Gatekeeper Node Execution] Resumed. Received user answers: {user_answers}")
         clarification_response.update(user_answers)

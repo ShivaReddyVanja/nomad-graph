@@ -17,7 +17,7 @@ def get_next_date(date_str: str, days: int) -> str:
         return date_str
 
 from langchain_core.runnables import RunnableConfig
-from src.utils.logger import log_agent
+from src.utils.logger import log_agent, log_dev
 
 def travel_node(state: AgentState, config: RunnableConfig) -> Dict[str, Any]:
     """
@@ -32,23 +32,38 @@ def travel_node(state: AgentState, config: RunnableConfig) -> Dict[str, Any]:
     
     if not planned_dests:
         destination = params.get("destination", "")
-        log_agent(config, f"[Travel Agent] Warning: No planned_destinations. Searching single transit options from {origin} to {destination}...")
+        log_agent(config, f"Finding flight options from {origin} to {destination}...")
+        log_dev(config, f"[Travel Agent] Warning: No planned_destinations. Searching single transit options from {origin} to {destination}...")
+        import time
+        start_time = time.perf_counter()
         transit_options = search_transit(origin, destination, start_date)
+        dur = time.perf_counter() - start_time
+        log_dev(config, f"[Latency Metric] Travel Agent flight search ({origin} -> {destination}): {dur:.2f}s")
+        if transit_options:
+            log_agent(config, "Discovered travel options:")
+            for opt in transit_options:
+                price_str = f"₹{int(opt.estimated_price):,}" if opt.estimated_price else "Price unavailable"
+                log_agent(config, f"  • {opt.carrier}: {opt.origin} -> {opt.destination} ({opt.departure_time} - {price_str})")
         return {"transit": transit_options}
         
     transit_options = []
     current_origin = origin
     current_date = start_date
     
-    log_agent(config, f"[Travel Agent] Building transit chain for destinations: {[d.destination for d in planned_dests]} starting on {start_date}...")
+    log_agent(config, "Finding flight options and connections...")
+    log_dev(config, f"[Travel Agent] Building transit chain for destinations: {[d.destination for d in planned_dests]} starting on {start_date}...")
     
     # 1. Query transit for all forward hops in the route
     for alloc in planned_dests:
         dest = alloc.destination
         days = alloc.duration_days
         
-        log_agent(config, f"[Travel Agent] Hop: {current_origin} -> {dest} (Date: {current_date or 'default'})")
+        log_dev(config, f"[Travel Agent] Hop: {current_origin} -> {dest} (Date: {current_date or 'default'})")
+        import time
+        start_time = time.perf_counter()
         options = search_transit(current_origin, dest, current_date)
+        dur = time.perf_counter() - start_time
+        log_dev(config, f"[Latency Metric] Travel Agent flight search ({current_origin} -> {dest}): {dur:.2f}s")
         if options:
             transit_options.extend(options)
             
@@ -56,11 +71,21 @@ def travel_node(state: AgentState, config: RunnableConfig) -> Dict[str, Any]:
         current_date = get_next_date(current_date, days)
         
     # 2. Query return transit back to starting origin
-    log_agent(config, f"[Travel Agent] Hop (Return): {current_origin} -> {origin} (Date: {current_date or 'default'})")
+    log_dev(config, f"[Travel Agent] Hop (Return): {current_origin} -> {origin} (Date: {current_date or 'default'})")
+    import time
+    start_time = time.perf_counter()
     return_options = search_transit(current_origin, origin, current_date)
+    dur = time.perf_counter() - start_time
+    log_dev(config, f"[Latency Metric] Travel Agent flight search ({current_origin} -> {origin}): {dur:.2f}s")
     if return_options:
         transit_options.extend(return_options)
         
+    if transit_options:
+        log_agent(config, "Discovered travel options:")
+        for opt in transit_options:
+            price_str = f"₹{int(opt.estimated_price):,}" if opt.estimated_price else "Price unavailable"
+            log_agent(config, f"  • {opt.carrier}: {opt.origin} -> {opt.destination} ({opt.departure_time} - {price_str})")
+            
     return {
         "transit": transit_options
     }
