@@ -130,13 +130,15 @@ export default function TravelMap({ itinerary }: TravelMapProps) {
         let color = "#3b82f6"; // default -> Blue
         let fallbackEmoji = "📍";
 
-        if (place.category === "stay" || place.category === "hotel" || place.category === "accommodation") {
+        const cat = place.category as string;
+
+        if (cat === "stay" || cat === "hotel" || cat === "accommodation") {
           color = "#ef4444"; // stay -> Map Red
           fallbackEmoji = "🏨";
-        } else if (place.category === "food" || place.category === "restaurant" || place.category === "cafe") {
+        } else if (cat === "food" || cat === "restaurant" || cat === "cafe") {
           color = "#eab308"; // food -> Map Yellow
           fallbackEmoji = "🍽️";
-        } else if (place.category === "sightseeing" || place.category === "activity" || place.category === "attraction") {
+        } else if (cat === "sightseeing" || cat === "activity" || cat === "attraction") {
           color = "#22c55e"; // sightseeing -> Map Green
           fallbackEmoji = "🏛️";
         }

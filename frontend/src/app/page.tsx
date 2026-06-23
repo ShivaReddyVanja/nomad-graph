@@ -23,6 +23,7 @@ export default function Home() {
   } = useEventStream();
 
   const [leftTab, setLeftTab] = useState<"pipeline" | "map" | "path">("pipeline");
+  const [isConsoleOpen, setIsConsoleOpen] = useState(true);
 
   // Refs for tracking coordinates and rendering the global wire directly in DOM
   const svgRef = useRef<SVGSVGElement>(null);
@@ -42,8 +43,10 @@ export default function Home() {
   useEffect(() => {
     if (phase === "completed" && finalItinerary) {
       setLeftTab("path");
+      setIsConsoleOpen(false); // Auto-close chat console
     } else if (phase === "idle") {
       setLeftTab("pipeline");
+      setIsConsoleOpen(true); // Re-open chat console on reset
     }
   }, [phase, finalItinerary]);
 
@@ -61,7 +64,8 @@ export default function Home() {
         pathRef.current &&
         glowPathRef.current &&
         chargePathRef.current &&
-        leftTab === "pipeline"
+        leftTab === "pipeline" &&
+        isConsoleOpen
       ) {
         // Show wire
         if (svgRef.current) svgRef.current.style.opacity = "1";
@@ -165,10 +169,10 @@ export default function Home() {
     return () => {
       cancelAnimationFrame(animFrameId);
     };
-  }, [phase, leftTab]);
+  }, [phase, leftTab, isConsoleOpen]);
 
   return (
-    <main className="app-root">
+    <main className={`app-root ${isConsoleOpen ? "console-open" : "console-closed"}`}>
       {/* ── Left Panel: Pipeline OR Map (never both at once) ── */}
       <aside className="app-sidebar">
         {/* Full-height toggle bar — always visible */}
@@ -237,6 +241,28 @@ export default function Home() {
               <circle cx="20" cy="12" r="2.5" fill="currentColor" />
             </svg>
             Path
+          </button>
+          
+          {/* Toggle Console Button */}
+          <button
+            onClick={() => setIsConsoleOpen(!isConsoleOpen)}
+            className="view-toggle-btn"
+            style={{ marginLeft: "auto" }}
+            title={isConsoleOpen ? "Hide Interaction Console" : "Show Interaction Console"}
+          >
+            <svg
+              width="12"
+              height="12"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+            </svg>
+            {isConsoleOpen ? "Hide Console" : "Show Console"}
           </button>
         </div>
 

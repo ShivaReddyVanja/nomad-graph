@@ -394,11 +394,8 @@ function phaseIsActive(phase: string): boolean {
   return ["validating", "planning", "discovering", "compiling"].includes(phase);
 }
 
-function CentralLogBox({ activeApiCall, logs, phase }: { activeApiCall: ApiCallEvent | null, logs?: LogMessage[], phase: string }) {
+function CentralLogBox({ activeApiCall, logs, phase }: { activeApiCall: ApiCallEvent | null | undefined, logs?: LogMessage[], phase: string }) {
   const isCompleted = phase === "completed";
-  
-  if (!activeApiCall && !isCompleted) return null;
-
   const lastLog = logs?.filter(l => l.type === 'log').slice(-1)[0]?.text || "Waiting for activity...";
 
   if (isCompleted) {
@@ -438,6 +435,8 @@ function CentralLogBox({ activeApiCall, logs, phase }: { activeApiCall: ApiCallE
       </div>
     );
   }
+
+  if (!activeApiCall) return null;
 
   let Logo = UnknownApiIcon;
   let toolName = activeApiCall.tool;

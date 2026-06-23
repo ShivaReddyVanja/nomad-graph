@@ -199,6 +199,7 @@ a {
   background: #f8fafc;
   border-right: 1px solid var(--color-border-solid);
   overflow: hidden;
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1), height 0.4s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.4s;
 }
 
 /* Full-height content area below the toggle bar */
@@ -213,6 +214,7 @@ a {
 /* Right panel — 42%, vertical column */
 .app-right-panel {
   width: var(--panel-right-width);
+  flex-shrink: 0;
   height: 100%;
   display: flex;
   flex-direction: column;
@@ -220,6 +222,20 @@ a {
   background: var(--color-bg);
   position: relative;
   box-shadow: -6px 0 20px rgba(0,0,0,0.025);
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1), height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease-in-out, visibility 0.4s;
+}
+
+/* Console Toggle States */
+.console-closed .app-sidebar {
+  width: 100%;
+  border-right-color: transparent;
+}
+
+.console-closed .app-right-panel {
+  width: 0px !important;
+  opacity: 0;
+  pointer-events: none;
+  visibility: hidden;
 }
 
 .panel-divider {
@@ -1542,15 +1558,29 @@ a {
   .app-root { flex-direction: column; }
 
   .app-sidebar {
-    width: 100%;
+    width: 100% !important;
     height: 50vh;
     border-right: none;
     border-bottom: 1px solid var(--color-border-solid);
   }
 
   .app-right-panel {
-    width: 100%;
+    width: 100% !important;
     height: 50vh;
+    box-shadow: 0 -6px 20px rgba(0,0,0,0.025);
+  }
+
+  /* Console closed state on mobile */
+  .console-closed .app-sidebar {
+    height: 100vh;
+    border-bottom-color: transparent;
+  }
+
+  .console-closed .app-right-panel {
+    height: 0px !important;
+    opacity: 0;
+    pointer-events: none;
+    visibility: hidden;
   }
 }
 

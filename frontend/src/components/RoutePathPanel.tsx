@@ -353,7 +353,7 @@ export default function RoutePathPanel({ itinerary }: RoutePathPanelProps) {
             const itemColor = getCategoryColor(coord);
             
             // In the reference map, items alternate. Let's place content on the right.
-            const contentAlign = "right";
+            const contentAlign = "right" as string;
 
             return (
               <div
@@ -423,8 +423,8 @@ export default function RoutePathPanel({ itinerary }: RoutePathPanelProps) {
                     /* Transit Label */
                     <div className="map-text-block transit-block" style={{ width: "100%", alignItems: "center" }}>
                       <div className="map-transit-icon" style={{ color: itemColor }}>
-                        {coord.itemData.mode === "flight" ? <Plane size={16} /> : 
-                         coord.itemData.mode === "train" ? <Train size={16} /> : <Car size={16} />}
+                        {(coord.itemData as TransitOption).mode === "flight" ? <Plane size={16} /> : 
+                         (coord.itemData as TransitOption).mode === "train" ? <Train size={16} /> : <Car size={16} />}
                       </div>
                       <h4 className="map-title" style={{ color: itemColor, textAlign: "center", marginBottom: "4px", fontSize: "12px" }}>
                         {(coord.itemData as TransitOption).mode.toUpperCase()}

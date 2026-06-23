@@ -94,10 +94,40 @@ def travel_node(state: AgentState, config: RunnableConfig) -> Dict[str, Any]:
                     opt.id = f"flight_{origin.lower().replace(' ', '_')}_{destination.lower().replace(' ', '_')}_{idx}"
                 log_agent(config, f"✈️  Found flight connections for {origin} ➔ {destination}!")
             else:
-                log_agent(config, f"⚠️ No direct flights found for {origin} ➔ {destination}. Falling back to driving...")
-                emit_event(config, {"type": "api_call", "tool": "Google Maps"})
-                transit_options = get_road_transit(origin, destination)
-                log_agent(config, f"🚗 Sourced driving route from {origin} ➔ {destination} ({transit_options[0].duration_minutes} mins)!")
+                # Smart fallback for single destination
+                road_route = get_road_transit(origin, destination)
+                driving_dur = road_route[0].duration_minutes if road_route else 9999
+                
+                if driving_dur <= 360:
+                    log_agent(config, f"🚗 Sourced direct driving route from {origin} ➔ {destination} ({driving_dur} mins) since it is nearby.")
+                    transit_options = road_route
+                else:
+                    log_agent(config, f"🔍 No direct flights found for {origin} ➔ {destination} (distance too far for direct drive). Resolving nearest major commercial airport...")
+                    try:
+                        from src.tools.flights import resolve_nearest_airport
+                        airport_info = resolve_nearest_airport(destination)
+                        airport_city = airport_info.airport_city
+                        airport_code = airport_info.iata_code
+                        
+                        log_agent(config, f"📍 Nearest major airport to {destination} resolved as {airport_city} ({airport_code}).")
+                        
+                        # Search flights to that airport
+                        log_agent(config, f"🔍 Searching flights from {origin} to nearest airport {airport_city}...")
+                        flight_options = search_transit(origin, airport_city, start_date)
+                        
+                        if flight_options:
+                            for idx, opt in enumerate(flight_options):
+                                opt.id = f"flight_{origin.lower().replace(' ', '_')}_{airport_city.lower().replace(' ', '_')}_{idx}"
+                            
+                            road_to_dest = get_road_transit(airport_city, destination)
+                            log_agent(config, f"✈️🚗 Routing via {airport_city} ({airport_code}): flight to {airport_city} + drive to {destination} ({road_to_dest[0].duration_minutes} mins).")
+                            transit_options = [flight_options[0]] + road_to_dest
+                        else:
+                            log_agent(config, f"⚠️ No flight connections found to the nearest airport {airport_city}. Falling back to driving the whole way...")
+                            transit_options = road_route
+                    except Exception as e:
+                        log_dev(config, f"[Travel Agent] Error resolving nearest airport: {e}. Falling back to direct drive.")
+                        transit_options = road_route
 
         if transit_options:
             segments = defaultdict(list)
@@ -161,10 +191,40 @@ def travel_node(state: AgentState, config: RunnableConfig) -> Dict[str, Any]:
                     opt.id = f"flight_{current_origin.lower().replace(' ', '_')}_{dest.lower().replace(' ', '_')}_{idx}"
                 log_agent(config, f"✈️  Found flight connections for {current_origin} ➔ {dest}!")
             else:
-                log_agent(config, f"⚠️ No direct flights found for {current_origin} ➔ {dest}. Falling back to driving...")
-                emit_event(config, {"type": "api_call", "tool": "Google Maps"})
-                options = get_road_transit(current_origin, dest)
-                log_agent(config, f"🚗 Sourced driving route from {current_origin} ➔ {dest} ({options[0].duration_minutes} mins)!")
+                # Smart forward fallback
+                road_route = get_road_transit(current_origin, dest)
+                driving_dur = road_route[0].duration_minutes if road_route else 9999
+                
+                if driving_dur <= 360:
+                    log_agent(config, f"🚗 Sourced direct driving route from {current_origin} ➔ {dest} ({driving_dur} mins) since it is nearby.")
+                    options = road_route
+                else:
+                    log_agent(config, f"🔍 No direct flights found for {current_origin} ➔ {dest} (distance too far for direct drive). Resolving nearest major commercial airport...")
+                    try:
+                        from src.tools.flights import resolve_nearest_airport
+                        airport_info = resolve_nearest_airport(dest)
+                        airport_city = airport_info.airport_city
+                        airport_code = airport_info.iata_code
+                        
+                        log_agent(config, f"📍 Nearest major airport to {dest} resolved as {airport_city} ({airport_code}).")
+                        
+                        # Search flights to that airport
+                        log_agent(config, f"🔍 Searching flights from {current_origin} to nearest airport {airport_city}...")
+                        flight_options = search_transit(current_origin, airport_city, current_date)
+                        
+                        if flight_options:
+                            for idx, opt in enumerate(flight_options):
+                                opt.id = f"flight_{current_origin.lower().replace(' ', '_')}_{airport_city.lower().replace(' ', '_')}_{idx}"
+                            
+                            road_to_dest = get_road_transit(airport_city, dest)
+                            log_agent(config, f"✈️🚗 Routing via {airport_city} ({airport_code}): flight to {airport_city} + drive to {dest} ({road_to_dest[0].duration_minutes} mins).")
+                            options = [flight_options[0]] + road_to_dest
+                        else:
+                            log_agent(config, f"⚠️ No flight connections found to the nearest airport {airport_city}. Falling back to driving the whole way...")
+                            options = road_route
+                    except Exception as e:
+                        log_dev(config, f"[Travel Agent] Error resolving nearest airport: {e}. Falling back to direct drive.")
+                        options = road_route
         
         if options:
             transit_options.extend(options)
@@ -190,10 +250,41 @@ def travel_node(state: AgentState, config: RunnableConfig) -> Dict[str, Any]:
                 opt.id = f"flight_{current_origin.lower().replace(' ', '_')}_{origin.lower().replace(' ', '_')}_{idx}"
             log_agent(config, f"✈️  Found flight connections for {current_origin} ➔ {origin}!")
         else:
-            log_agent(config, f"⚠️ No direct flights found for {current_origin} ➔ {origin}. Falling back to driving...")
-            emit_event(config, {"type": "api_call", "tool": "Google Maps"})
-            return_options = get_road_transit(current_origin, origin)
-            log_agent(config, f"🚗 Sourced driving route from {current_origin} ➔ {origin} ({return_options[0].duration_minutes} mins)!")
+            # Smart return fallback
+            road_route = get_road_transit(current_origin, origin)
+            driving_dur = road_route[0].duration_minutes if road_route else 9999
+            
+            if driving_dur <= 360:
+                log_agent(config, f"🚗 Sourced direct driving route from {current_origin} ➔ {origin} ({driving_dur} mins) since it is nearby.")
+                return_options = road_route
+            else:
+                log_agent(config, f"🔍 No direct flights found for {current_origin} ➔ {origin} (distance too far for direct drive). Resolving nearest major commercial airport...")
+                try:
+                    from src.tools.flights import resolve_nearest_airport
+                    airport_info = resolve_nearest_airport(current_origin)
+                    airport_city = airport_info.airport_city
+                    airport_code = airport_info.iata_code
+                    
+                    log_agent(config, f"📍 Nearest major airport to starting point {current_origin} resolved as {airport_city} ({airport_code}).")
+                    
+                    # Drive from current destination to the nearest airport, then fly from there to origin
+                    road_to_airport = get_road_transit(current_origin, airport_city)
+                    
+                    log_agent(config, f"🔍 Searching flights from {airport_city} to {origin}...")
+                    flight_options = search_transit(airport_city, origin, current_date)
+                    
+                    if flight_options:
+                        for idx, opt in enumerate(flight_options):
+                            opt.id = f"flight_{airport_city.lower().replace(' ', '_')}_{origin.lower().replace(' ', '_')}_{idx}"
+                        
+                        log_agent(config, f"✈️🚗 Routing via {airport_city} ({airport_code}): drive to {airport_city} ({road_to_airport[0].duration_minutes} mins) + flight to {origin}.")
+                        return_options = road_to_airport + [flight_options[0]]
+                    else:
+                        log_agent(config, f"⚠️ No flight connections found from the nearest airport {airport_city}. Falling back to driving the whole way...")
+                        return_options = road_route
+                except Exception as e:
+                    log_dev(config, f"[Travel Agent] Error resolving nearest airport: {e}. Falling back to direct drive.")
+                    return_options = road_route
     
     if return_options:
         transit_options.extend(return_options)
