@@ -23,6 +23,7 @@ def food_node(state: AgentState, config: RunnableConfig) -> Dict[str, Any]:
         log_dev(config, f"[Food Agent] Warning: No planned_destinations. Searching dining in {destination}...")
         import time
         start_time = time.perf_counter()
+        emit_event(config, {"type": "api_call", "tool": "Google Places"})
         food_options = search_food(destination, styles)
         dur = time.perf_counter() - start_time
         log_dev(config, f"[Latency Metric] Food Agent dining search in {destination}: {dur:.2f}s")
@@ -55,6 +56,7 @@ def food_node(state: AgentState, config: RunnableConfig) -> Dict[str, Any]:
         log_dev(config, f"[Food Agent] Searching dining in: {dest}...")
         import time
         start_time = time.perf_counter()
+        emit_event(config, {"type": "api_call", "tool": "TripAdvisor"})
         spots = search_food(dest, styles)
         dur = time.perf_counter() - start_time
         log_dev(config, f"[Latency Metric] Food Agent dining search in {dest}: {dur:.2f}s")

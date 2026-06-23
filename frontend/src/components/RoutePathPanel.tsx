@@ -357,7 +357,7 @@ export default function RoutePathPanel({ itinerary }: RoutePathPanelProps) {
 
             return (
               <div
-                key={coord.id}
+                key={`${coord.id}-${coord.dayIndex}-${coord.itemIndex}`}
                 className={`map-event-anchor ${isGrayed ? "map-grayscale" : ""}`}
                 style={{
                   position: "absolute",

@@ -103,7 +103,7 @@ def query_google_places(
 
 def get_dynamic_food_fallback(destination: str, lat: float, lng: float) -> List[Place]:
     """
-    Generates a dynamic dining candidate using actual destination coordinates.
+    Generates dynamic dining candidates using actual destination coordinates.
     """
     return [
         Place(
@@ -133,6 +133,62 @@ def get_dynamic_food_fallback(destination: str, lat: float, lng: float) -> List[
             rating=4.3,
             cost_estimate=2.0,
             description=f"A charming bistro in {destination} specializing in traditional local cuisine and dishes."
+        ),
+        Place(
+            id="fallback_food_3",
+            name="Spice Route Grill",
+            category=PlaceCategory.FOOD,
+            location=Location(
+                name="Spice Route Grill",
+                address=f"Food Street, {destination}, India",
+                latitude=lat - 0.003,
+                longitude=lng + 0.003
+            ),
+            rating=4.4,
+            cost_estimate=3.0,
+            description=f"An upscale grill house in {destination} showcasing regional spices and local recipes."
+        ),
+        Place(
+            id="fallback_food_4",
+            name="The Green Garden Cafe",
+            category=PlaceCategory.FOOD,
+            location=Location(
+                name="The Green Garden Cafe",
+                address=f"Nature Avenue, {destination}, India",
+                latitude=lat + 0.002,
+                longitude=lng - 0.004
+            ),
+            rating=4.6,
+            cost_estimate=1.0,
+            description=f"A cozy garden cafe in {destination} offering organic, farm-to-table breakfast and artisan beverages."
+        ),
+        Place(
+            id="fallback_food_5",
+            name="Sunset View Rooftop",
+            category=PlaceCategory.FOOD,
+            location=Location(
+                name="Sunset View Rooftop",
+                address=f"Skyline Heights, {destination}, India",
+                latitude=lat - 0.005,
+                longitude=lng - 0.002
+            ),
+            rating=4.7,
+            cost_estimate=4.0,
+            description=f"A scenic rooftop dining experience in {destination} with spectacular views and signature fusion dishes."
+        ),
+        Place(
+            id="fallback_food_6",
+            name="Local Street Food Plaza",
+            category=PlaceCategory.FOOD,
+            location=Location(
+                name="Local Street Food Plaza",
+                address=f"Bazaar Lane, {destination}, India",
+                latitude=lat + 0.004,
+                longitude=lng + 0.001
+            ),
+            rating=4.2,
+            cost_estimate=1.0,
+            description=f"A vibrant food plaza in {destination} featuring the city's best local street food vendors under one roof."
         )
     ]
 
@@ -168,6 +224,62 @@ def get_dynamic_activity_fallback(destination: str, lat: float, lng: float) -> L
             rating=4.5,
             cost_estimate=0.0,
             description=f"A beautiful green space in {destination} offering walking paths and scenery."
+        ),
+        Place(
+            id="fallback_act_3",
+            name=f"Cultural Heritage Museum",
+            category=PlaceCategory.SIGHTSEEING,
+            location=Location(
+                name=f"Cultural Heritage Museum",
+                address=f"Museum Road, {destination}, India",
+                latitude=lat + 0.006,
+                longitude=lng - 0.003
+            ),
+            rating=4.6,
+            cost_estimate=2.0,
+            description=f"An informative museum in {destination} preserving regional art, costumes, and historical artifacts."
+        ),
+        Place(
+            id="fallback_act_4",
+            name=f"Botanical Gardens & Walkway",
+            category=PlaceCategory.SIGHTSEEING,
+            location=Location(
+                name=f"Botanical Gardens & Walkway",
+                address=f"Green Ring, {destination}, India",
+                latitude=lat - 0.004,
+                longitude=lng + 0.004
+            ),
+            rating=4.4,
+            cost_estimate=1.0,
+            description=f"A peaceful botanical sanctuary in {destination} exhibiting exotic plant species and glass greenhouses."
+        ),
+        Place(
+            id="fallback_act_5",
+            name=f"Ancient Temple Ruins",
+            category=PlaceCategory.SIGHTSEEING,
+            location=Location(
+                name=f"Ancient Temple Ruins",
+                address=f"Sacred Valley, {destination}, India",
+                latitude=lat + 0.002,
+                longitude=lng + 0.005
+            ),
+            rating=4.8,
+            cost_estimate=0.0,
+            description=f"A spiritual site in {destination} containing preserved temple carvings and archaeological architecture."
+        ),
+        Place(
+            id="fallback_act_6",
+            name=f"Artisanal Craft Market",
+            category=PlaceCategory.SIGHTSEEING,
+            location=Location(
+                name=f"Artisanal Craft Market",
+                address=f"Handicraft Quarter, {destination}, India",
+                latitude=lat - 0.002,
+                longitude=lng - 0.006
+            ),
+            rating=4.3,
+            cost_estimate=0.0,
+            description=f"A bustling craft market in {destination} where local artisans sell handmade pottery, textiles, and art."
         )
     ]
 
@@ -188,7 +300,7 @@ def search_food(destination: str, travel_styles: List[str]) -> List[Place]:
         query_str += f" specializing in {', '.join(travel_styles)}"
         
     try:
-        places = query_google_places(lat, lng, query_str, PlaceCategory.FOOD, limit=5)
+        places = query_google_places(lat, lng, query_str, PlaceCategory.FOOD, limit=12)
         if not places:
             print(f"[Places Tool] Places API returned empty results for food. Generating dynamic fallback at ({lat}, {lng}).")
             return get_dynamic_food_fallback(destination, lat, lng)
@@ -214,7 +326,7 @@ def search_activities(destination: str, travel_styles: List[str]) -> List[Place]
         query_str += f" for {', '.join(travel_styles)}"
         
     try:
-        places = query_google_places(lat, lng, query_str, PlaceCategory.SIGHTSEEING, limit=5)
+        places = query_google_places(lat, lng, query_str, PlaceCategory.SIGHTSEEING, limit=12)
         if not places:
             print(f"[Places Tool] Places API returned empty results for activities. Generating dynamic fallback at ({lat}, {lng}).")
             return get_dynamic_activity_fallback(destination, lat, lng)

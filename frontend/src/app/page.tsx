@@ -16,6 +16,7 @@ export default function Home() {
     finalItinerary,
     validationWarnings,
     interruptedQuestions,
+    activeApiCall,
     startPlanning,
     submitClarification,
     reset,
@@ -68,8 +69,8 @@ export default function Home() {
         const r1 = gatekeeper.getBoundingClientRect();
         const r2 = chatInput.getBoundingClientRect();
 
-        // Gatekeeper socket: middle of right edge
-        const x1 = r1.right;
+        // Gatekeeper socket: middle of right edge, offset by 3px for stroke cap
+        const x1 = r1.right + 3;
         const y1 = r1.top + r1.height / 2;
 
         // Chat Input plug: middle of left edge
@@ -242,7 +243,7 @@ export default function Home() {
         {/* Full-height content — pipeline, map, or path, exclusively */}
         <div className="sidebar-content">
           {leftTab === "pipeline" && (
-            <PipelinePanel activeNode={activeNode} phase={phase} candidates={candidates} />
+            <PipelinePanel activeNode={activeNode} phase={phase} candidates={candidates} logs={logs} activeApiCall={activeApiCall} />
           )}
           {leftTab === "map" && (
             <TravelMap itinerary={finalItinerary} />

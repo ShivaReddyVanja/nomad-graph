@@ -64,6 +64,11 @@ export interface CandidateDiscovery {
   timestamp: number;
 }
 
+export interface ApiCallEvent {
+  tool: string;
+  timestamp: number;
+}
+
 export function useEventStream() {
   const [phase, setPhase] = useState<StreamPhase>("idle");
   const [logs, setLogs] = useState<LogMessage[]>([]);
@@ -79,6 +84,7 @@ export function useEventStream() {
   const [interruptedQuestions, setInterruptedQuestions] = useState<string[] | null>(null);
   const [threadId, setThreadId] = useState<string | null>(null);
   const [lastDiscovery, setLastDiscovery] = useState<CandidateDiscovery | null>(null);
+  const [activeApiCall, setActiveApiCall] = useState<ApiCallEvent | null>(null);
 
   const abortControllerRef = useRef<AbortController | null>(null);
 
@@ -113,6 +119,7 @@ export function useEventStream() {
     setInterruptedQuestions(null);
     setThreadId(null);
     setLastDiscovery(null);
+    setActiveApiCall(null);
   }, []);
 
   const processStream = async (url: string, requestBody: any) => {
@@ -207,6 +214,12 @@ export function useEventStream() {
         addLog(event.message, "log");
         break;
 
+      case "api_call":
+        setActiveApiCall({ tool: event.tool, timestamp: Date.now() });
+        // Also log it if there's a message, or just ignore message and only use for UI
+        if (event.message) addLog(event.message, "log");
+        break;
+
       case "candidates_discovered":
         setCandidates((prev) => ({
           ...prev,
@@ -283,6 +296,7 @@ export function useEventStream() {
     interruptedQuestions,
     threadId,
     lastDiscovery,
+    activeApiCall,
     startPlanning,
     submitClarification,
     reset,

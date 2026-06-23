@@ -194,6 +194,7 @@ async def captain_node(state: AgentState, config: RunnableConfig) -> Dict[str, A
     # =================================================================
     dest_day_counters = defaultdict(int)
     reconstructed_days = []
+    scheduled_place_ids = set()
     
     start_date = parsed_params.get("start_date", "")
     if not start_date or not isinstance(start_date, str) or len(start_date.strip()) < 10:
@@ -215,29 +216,42 @@ async def captain_node(state: AgentState, config: RunnableConfig) -> Dict[str, A
             if transition_transit:
                 day_schedule.append(transition_transit)
 
-        # B. Sights/Activities (Distribute 2 per day)
+        # B. Sights/Activities (Distribute 2 per day, strictly deduplicated)
         acts_list = dest_activities[dest]
-        cnt = dest_day_counters[dest]
         if acts_list:
-            act1 = acts_list[(2 * cnt) % len(acts_list)]
-            day_schedule.append(act1)
-            if len(acts_list) > 1:
-                act2 = acts_list[(2 * cnt + 1) % len(acts_list)]
-                day_schedule.append(act2)
+            available_acts = [a for a in acts_list if a.id not in scheduled_place_ids]
+            if not available_acts:
+                log_dev(config, f"[Captain Node] Warning: Out of unique sightseeing candidates for {dest}. Sightseeing spots will not be duplicated.")
+            else:
+                act1 = available_acts[0]
+                day_schedule.append(act1)
+                scheduled_place_ids.add(act1.id)
+                
+                if len(available_acts) > 1:
+                    act2 = available_acts[1]
+                    day_schedule.append(act2)
+                    scheduled_place_ids.add(act2.id)
 
-        # C. Dining/Food (Distribute 2 per day)
+        # C. Dining/Food (Distribute 2 per day, strictly deduplicated)
         food_list = dest_food[dest]
         if food_list:
-            f1 = food_list[(2 * cnt) % len(food_list)]
-            day_schedule.append(f1)
-            if len(food_list) > 1:
-                f2 = food_list[(2 * cnt + 1) % len(food_list)]
-                day_schedule.append(f2)
+            available_food = [f for f in food_list if f.id not in scheduled_place_ids]
+            if not available_food:
+                log_dev(config, f"[Captain Node] Warning: Out of unique dining candidates for {dest}. Dining spots will not be duplicated.")
+            else:
+                f1 = available_food[0]
+                day_schedule.append(f1)
+                scheduled_place_ids.add(f1.id)
+                
+                if len(available_food) > 1:
+                    f2 = available_food[1]
+                    day_schedule.append(f2)
+                    scheduled_place_ids.add(f2.id)
 
         # Increment day counter for the destination
         dest_day_counters[dest] += 1
 
-        # D. Lodging / Hotel
+        # D. Lodging / Hotel (Allowed to repeat, not added to scheduled_place_ids)
         hotel = dest_to_hotel.get(dest)
         if hotel:
             day_schedule.append(hotel)

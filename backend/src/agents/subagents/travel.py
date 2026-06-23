@@ -69,8 +69,10 @@ def travel_node(state: AgentState, config: RunnableConfig) -> Dict[str, Any]:
         is_flight = origin_code != dest_code and not (origin_code == "DEL" and dest_code == "DEL")
         
         if is_flight:
+            emit_event(config, {"type": "api_call", "tool": "Google Flights"})
             log_agent(config, f"🔍 Searching Google Flights for {start_city} to {end_city}...")
         else:
+            emit_event(config, {"type": "api_call", "tool": "Google Maps"})
             log_agent(config, f"🔍 Finding road routes and driving times from {start_city} to {end_city}...")
         return is_flight
 
@@ -93,6 +95,7 @@ def travel_node(state: AgentState, config: RunnableConfig) -> Dict[str, Any]:
                 log_agent(config, f"✈️  Found flight connections for {origin} ➔ {destination}!")
             else:
                 log_agent(config, f"⚠️ No direct flights found for {origin} ➔ {destination}. Falling back to driving...")
+                emit_event(config, {"type": "api_call", "tool": "Google Maps"})
                 transit_options = get_road_transit(origin, destination)
                 log_agent(config, f"🚗 Sourced driving route from {origin} ➔ {destination} ({transit_options[0].duration_minutes} mins)!")
 
@@ -138,6 +141,7 @@ def travel_node(state: AgentState, config: RunnableConfig) -> Dict[str, Any]:
         
         is_flight = True
         if i > 0 and has_road_style:
+            emit_event(config, {"type": "api_call", "tool": "Google Maps"})
             log_agent(config, f"🔍 Finding road routes and driving times from {current_origin} to {dest}...")
             is_flight = False
         else:
@@ -158,6 +162,7 @@ def travel_node(state: AgentState, config: RunnableConfig) -> Dict[str, Any]:
                 log_agent(config, f"✈️  Found flight connections for {current_origin} ➔ {dest}!")
             else:
                 log_agent(config, f"⚠️ No direct flights found for {current_origin} ➔ {dest}. Falling back to driving...")
+                emit_event(config, {"type": "api_call", "tool": "Google Maps"})
                 options = get_road_transit(current_origin, dest)
                 log_agent(config, f"🚗 Sourced driving route from {current_origin} ➔ {dest} ({options[0].duration_minutes} mins)!")
         
@@ -186,6 +191,7 @@ def travel_node(state: AgentState, config: RunnableConfig) -> Dict[str, Any]:
             log_agent(config, f"✈️  Found flight connections for {current_origin} ➔ {origin}!")
         else:
             log_agent(config, f"⚠️ No direct flights found for {current_origin} ➔ {origin}. Falling back to driving...")
+            emit_event(config, {"type": "api_call", "tool": "Google Maps"})
             return_options = get_road_transit(current_origin, origin)
             log_agent(config, f"🚗 Sourced driving route from {current_origin} ➔ {origin} ({return_options[0].duration_minutes} mins)!")
     
