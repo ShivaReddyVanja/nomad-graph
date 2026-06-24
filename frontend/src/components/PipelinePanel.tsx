@@ -496,22 +496,76 @@ function CentralLogBox({ activeApiCall, logs, phase }: { activeApiCall: ApiCallE
 /* ─── Main Component ─────────────────────────────────────────────────────── */
 
 export default function PipelinePanel({ activeNode, phase, candidates, logs, activeApiCall }: PipelinePanelProps) {
-  const ns = (id: string) => getNodeState(id, activeNode, phase);
+  const [visitedNodes, setVisitedNodes] = React.useState<Set<string>>(new Set());
+
+  React.useEffect(() => {
+    if (activeNode) {
+      setVisitedNodes(prev => {
+        const next = new Set(prev);
+        next.add(activeNode);
+        return next;
+      });
+    }
+  }, [activeNode]);
+
+  React.useEffect(() => {
+    if (phase === "idle") {
+      setVisitedNodes(new Set());
+    }
+  }, [phase]);
+
+  const ns = (id: string): NodeState => {
+    if (activeNode === id) return "active";
+    if (phase === "error" && activeNode === id) return "error";
+    if (phase === "completed") return "done";
+    
+    // If this node has been visited in the past and is not active, it is done
+    if (visitedNodes.has(id)) {
+      return "done";
+    }
+
+    // Fallback: gatekeeper, planner, and captain are also marked done if we have advanced beyond them
+    const ORDER = ["gatekeeper", "planner", "captain", "travel", "stay", "food", "sightseeing"];
+    const activeIdx = ORDER.indexOf(activeNode ?? "");
+    const thisIdx = ORDER.indexOf(id);
+    if (activeIdx > thisIdx && thisIdx !== -1) {
+      return "done";
+    }
+
+    return "idle";
+  };
 
   const connectorDone = (aboveId: string) => ns(aboveId) === "done";
   const connectorActive = (aboveId: string) => ns(aboveId) === "active";
 
   const wireColor = (fromId: string, toId: string) => {
-    const fromState = ns(fromId);
     const toState = ns(toId);
-    
-    if (fromState === "done" || fromState === "active" || toState === "active") {
+
+    // Special case for return path: sightseeing -> captain
+    if (fromId === "sightseeing" && toId === "captain") {
+      const allSubagentsDone = ns("travel") === "done" && ns("stay") === "done" && ns("food") === "done" && ns("sightseeing") === "done";
+      const isCompilingOrDone = phase === "compiling" || phase === "completed";
+      if (allSubagentsDone && (ns("captain") === "active" || isCompilingOrDone)) {
+        return "#10b981"; // Vibrant Green
+      }
+      return "#cbd5e1"; // Base grey
+    }
+
+    // For any other connection, it should only be green if the target node is active or done
+    if (toState === "active" || toState === "done") {
       return "#10b981"; // Vibrant Green
     }
     return "#cbd5e1"; // Base grey
   };
 
-  const isFlowing = (toId: string) => ns(toId) === "active";
+  const isFlowing = (toId: string) => {
+    // Special case for return path: sightseeing -> captain
+    if (toId === "captain_final") {
+      const allSubagentsDone = ns("travel") === "done" && ns("stay") === "done" && ns("food") === "done" && ns("sightseeing") === "done";
+      return allSubagentsDone && ns("captain") === "active";
+    }
+    return ns(toId) === "active";
+  };
 
   const FlowingWire = ({ d, targetNode }: { d: string, targetNode: string }) => {
     const active = isFlowing(targetNode);
@@ -583,7 +637,7 @@ export default function PipelinePanel({ activeNode, phase, candidates, logs, act
 
               {/* Sightseeing (center: 590, 32) -> Captain (center: 340, -72, bottom: 340, -40) */}
               <path d="M 590 32 C 590 10, 340 5, 340 -15 L 340 -44" fill="none" stroke={wireColor("sightseeing", "captain")} strokeWidth="2.5" strokeLinecap="round" />
-              <FlowingWire d="M 590 32 C 590 10, 340 5, 340 -15 L 340 -44" targetNode="captain" />
+              <FlowingWire d="M 590 32 C 590 10, 340 5, 340 -15 L 340 -44" targetNode="captain_final" />
             </svg>
 
             {/* Central Log Box */}
