@@ -16,15 +16,16 @@ def sightseeing_node(state: AgentState, config: RunnableConfig) -> Dict[str, Any
     params = state.get("parsed_parameters", {})
     styles = params.get("travel_style", [])
     planned_dests = state.get("planned_destinations", [])
-    
     if not planned_dests:
         destination = params.get("destination", "")
+        duration_days = params.get("duration_days", 3) or 3
+        limit = max(12, duration_days * 2 + 4)
         log_agent(config, f"I'm identifying top attractions in {destination}...")
-        log_dev(config, f"[Sightseeing Agent] Warning: No planned_destinations. Searching activities in {destination}...")
+        log_dev(config, f"[Sightseeing Agent] Warning: No planned_destinations. Searching activities in {destination} (limit: {limit})...")
         import time
         start_time = time.perf_counter()
-        emit_event(config, {"type": "api_call", "tool": "SerpAPI"})
-        activity_options = search_activities(destination, styles)
+        emit_event(config, {"type": "api_call", "tool": "Google Places"})
+        activity_options = search_activities(destination, styles, limit=limit)
         dur = time.perf_counter() - start_time
         log_dev(config, f"[Latency Metric] Sightseeing Agent activities search in {destination}: {dur:.2f}s")
         
@@ -49,12 +50,13 @@ def sightseeing_node(state: AgentState, config: RunnableConfig) -> Dict[str, Any
     grouped_activities = defaultdict(list)
     for alloc in planned_dests:
         dest = alloc.destination
+        limit = max(12, alloc.duration_days * 2 + 4)
         log_agent(config, f"I'm identifying top attractions in {dest}...")
-        log_dev(config, f"[Sightseeing Agent] Searching activities in: {dest}...")
+        log_dev(config, f"[Sightseeing Agent] Searching activities in: {dest} (limit: {limit})...")
         import time
         start_time = time.perf_counter()
-        emit_event(config, {"type": "api_call", "tool": "Ticketmaster"})
-        acts = search_activities(dest, styles)
+        emit_event(config, {"type": "api_call", "tool": "Google Places"})
+        acts = search_activities(dest, styles, limit=limit)
         dur = time.perf_counter() - start_time
         log_dev(config, f"[Latency Metric] Sightseeing Agent activities search in {dest}: {dur:.2f}s")
         

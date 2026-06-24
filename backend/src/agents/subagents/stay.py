@@ -24,7 +24,7 @@ def stay_node(state: AgentState, config: RunnableConfig) -> Dict[str, Any]:
         
         import time
         start_time = time.perf_counter()
-        emit_event(config, {"type": "api_call", "tool": "Booking.com"})
+        emit_event(config, {"type": "api_call", "tool": "Google Places"})
         hotel_options = search_accommodation(destination, budget)
         dur = time.perf_counter() - start_time
         log_dev(config, f"[Latency Metric] Stay Agent accommodation search in {destination}: {dur:.2f}s")
@@ -55,7 +55,7 @@ def stay_node(state: AgentState, config: RunnableConfig) -> Dict[str, Any]:
         
         import time
         start_time = time.perf_counter()
-        emit_event(config, {"type": "api_call", "tool": "Booking.com"})
+        emit_event(config, {"type": "api_call", "tool": "Google Places"})
         hotels = search_accommodation(dest, budget)
         dur = time.perf_counter() - start_time
         log_dev(config, f"[Latency Metric] Stay Agent accommodation search in {dest}: {dur:.2f}s")

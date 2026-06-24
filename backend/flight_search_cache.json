@@ -258,5 +258,83 @@
       "estimated_price": 26982,
       "carrier": "Air India"
     }
+  ],
+  "skyscanner_hyderabad_port blair_2026-07-01": [
+    {
+      "type": "transit",
+      "id": "flight_skyscanner_1",
+      "origin": "Hyderabad (HYD)",
+      "destination": "Port Blair (IXZ)",
+      "departure_time": "2026-07-01 09:35",
+      "arrival_time": "2026-07-01 14:40",
+      "mode": "flight",
+      "duration_minutes": 305,
+      "estimated_price": 24336,
+      "carrier": "IndiGo"
+    },
+    {
+      "type": "transit",
+      "id": "flight_skyscanner_2",
+      "origin": "Hyderabad (HYD)",
+      "destination": "Port Blair (IXZ)",
+      "departure_time": "2026-07-01 05:55",
+      "arrival_time": "2026-07-01 13:10",
+      "mode": "flight",
+      "duration_minutes": 435,
+      "estimated_price": 19135,
+      "carrier": "IndiGo"
+    }
+  ],
+  "skyscanner_port blair_chennai_2026-07-01": [
+    {
+      "type": "transit",
+      "id": "flight_skyscanner_1",
+      "origin": "Port Blair (IXZ)",
+      "destination": "Chennai (MAA)",
+      "departure_time": "2026-07-01 13:50",
+      "arrival_time": "2026-07-01 20:30",
+      "mode": "flight",
+      "duration_minutes": 400,
+      "estimated_price": 14240,
+      "carrier": "Akasa Air"
+    },
+    {
+      "type": "transit",
+      "id": "flight_skyscanner_2",
+      "origin": "Port Blair (IXZ)",
+      "destination": "Chennai (MAA)",
+      "departure_time": "2026-07-01 15:15",
+      "arrival_time": "2026-07-01 21:50",
+      "mode": "flight",
+      "duration_minutes": 395,
+      "estimated_price": 16961,
+      "carrier": "Air India Express"
+    }
+  ],
+  "skyscanner_madurai_hyderabad_2026-07-01": [
+    {
+      "type": "transit",
+      "id": "flight_skyscanner_1",
+      "origin": "Madurai (IXM)",
+      "destination": "Hyderabad (HYD)",
+      "departure_time": "2026-07-01 09:40",
+      "arrival_time": "2026-07-01 13:45",
+      "mode": "flight",
+      "duration_minutes": 245,
+      "estimated_price": 12041,
+      "carrier": "IndiGo"
+    },
+    {
+      "type": "transit",
+      "id": "flight_skyscanner_2",
+      "origin": "Madurai (IXM)",
+      "destination": "Hyderabad (HYD)",
+      "departure_time": "2026-07-01 14:05",
+      "arrival_time": "2026-07-01 21:00",
+      "mode": "flight",
+      "duration_minutes": 415,
+      "estimated_price": 9429,
+      "carrier": "Air India"
+    }
   ]
 }

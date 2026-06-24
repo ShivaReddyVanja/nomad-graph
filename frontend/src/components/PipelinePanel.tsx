@@ -77,8 +77,17 @@ const SerpApiIcon = () => (
 
 const TicketmasterIcon = () => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <rect width="24" height="24" rx="4" fill="#006CFF"/>
-    <path d="M8 8V11H10V17H13V11H16V8H13V6.2C13 5.7 13.4 5.3 13.9 5.3H16V2.5H13.5C11.2 2.5 9.5 3.9 9.5 6.2V8H8Z" fill="white"/>
+    <rect width="24" height="24" rx="6" fill="#026CDF"/>
+    <path d="M6 8.5C6 7.67 6.67 7 7.5 7H16.5C17.33 7 18 7.67 18 8.5V10.5C17.17 10.5 16.5 11.17 16.5 12C16.5 12.83 17.17 13.5 18 13.5V15.5C18 16.33 17.33 17 16.5 17H7.5C6.67 17 6 16.33 6 15.5V13.5C6.83 13.5 7.5 12.83 7.5 12C7.5 11.17 6.83 10.5 6 10.5V8.5Z" fill="white"/>
+    <line x1="10" y1="9" x2="10" y2="15" stroke="#026CDF" strokeWidth="1.5" strokeDasharray="2 2"/>
+  </svg>
+);
+
+const SkyscannerIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect width="24" height="24" rx="6" fill="#00b2d6"/>
+    <path d="M12 4.5C7.86 4.5 4.5 7.86 4.5 12C4.5 16.14 7.86 19.5 12 19.5C16.14 19.5 19.5 16.14 19.5 12C19.5 7.86 16.14 4.5 12 4.5ZM12 16.5C9.52 16.5 7.5 14.48 7.5 12C7.5 9.52 9.52 7.5 12 7.5C14.48 7.5 16.5 9.52 16.5 12C16.5 14.48 14.48 16.5 12 16.5Z" fill="white"/>
+    <circle cx="12" cy="12" r="2.5" fill="white"/>
   </svg>
 );
 
@@ -440,8 +449,8 @@ function CentralLogBox({ activeApiCall, logs, phase }: { activeApiCall: ApiCallE
 
   let Logo = UnknownApiIcon;
   let toolName = activeApiCall.tool;
-  
   if (toolName === "Google Flights") Logo = GoogleFlightsIcon;
+  else if (toolName === "Skyscanner") Logo = SkyscannerIcon;
   else if (toolName === "Google Maps") Logo = GoogleMapsIcon;
   else if (toolName === "Booking.com") Logo = BookingComIcon;
   else if (toolName === "Google Places") Logo = GooglePlacesIcon;

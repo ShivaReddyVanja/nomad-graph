@@ -56,7 +56,7 @@ def food_node(state: AgentState, config: RunnableConfig) -> Dict[str, Any]:
         log_dev(config, f"[Food Agent] Searching dining in: {dest}...")
         import time
         start_time = time.perf_counter()
-        emit_event(config, {"type": "api_call", "tool": "TripAdvisor"})
+        emit_event(config, {"type": "api_call", "tool": "Google Places"})
         spots = search_food(dest, styles, limit=limit)
         dur = time.perf_counter() - start_time
         log_dev(config, f"[Latency Metric] Food Agent dining search in {dest}: {dur:.2f}s")

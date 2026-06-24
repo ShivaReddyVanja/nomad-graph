@@ -96,5 +96,19 @@
       "airport_city": "Kochi",
       "iata_code": "COK"
     }
+  ],
+  "mahabubnagar": [
+    {
+      "airport_city": "Hyderabad",
+      "iata_code": "HYD"
+    },
+    {
+      "airport_city": "Nanded",
+      "iata_code": "NDC"
+    },
+    {
+      "airport_city": "Vijayawada",
+      "iata_code": "VGA"
+    }
   ]
 }

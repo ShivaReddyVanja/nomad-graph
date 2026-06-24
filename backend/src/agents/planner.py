@@ -103,10 +103,10 @@ def planner_node(state: AgentState, config: RunnableConfig) -> Dict[str, Any]:
         # 4. Handle Finalizing the Plan
         if step.final_plan:
             plan = step.final_plan
-            # Verify that the allocated duration sums up to the user's duration_days
+            # Verify that the allocated duration does not exceed the user's maximum duration_days
             total_allocated = sum(dest.duration_days for dest in plan.ordered_destinations)
-            if total_allocated != duration_days:
-                log_dev(config, f"[Planner Agent] Warning: LLM allocated {total_allocated} days but user requested {duration_days} days. Adjusting the last destination to fit.")
+            if total_allocated > duration_days:
+                log_dev(config, f"[Planner Agent] Warning: LLM allocated {total_allocated} days, which exceeds user's max limit of {duration_days} days. Adjusting the last destination to fit.")
                 # Automatically adjust the last destination's duration to satisfy the constraint
                 diff = duration_days - sum(dest.duration_days for dest in plan.ordered_destinations[:-1])
                 if len(plan.ordered_destinations) > 0:

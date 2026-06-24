@@ -12,7 +12,7 @@ from pydantic import BaseModel, Field
 from src.graph.state import TravelMode, TransitOption
 from src.tools.flights import search_transit, get_airport_code, resolve_nearest_airports, select_best_airport
 from src.tools.routes import get_route_directions
-from src.utils.logger import log_agent, log_dev
+from src.utils.logger import log_agent, log_dev, emit_event
 
 class CityCountryDetails(BaseModel):
     country: str = Field(..., description="The name of the country the city is located in.")
@@ -214,6 +214,7 @@ def resolve_hop_segments(
     # 1. Local helper to get road transit segment (defined first so we can check driving time)
     def get_road_transit_option(start: str, end: str, idx: int = 0) -> TransitOption:
         nonlocal no_road_route
+        emit_event(config, {"type": "api_call", "tool": "Google Maps"})
         route_data = get_route_directions(start, end, "driving")
         
         if route_data.get("no_route"):
@@ -316,8 +317,11 @@ def resolve_hop_segments(
     flight_candidates = []
     
     if needs_flight:
+        provider_name = os.getenv("FLIGHT_PROVIDER", "serpapi").lower().strip()
+        tool_name = "Skyscanner" if provider_name == "skyscanner" else "Google Flights"
         log_agent(config, f"I'm checking available flights from {start_airport_city} to {end_airport_city}...")
         start_time = time.perf_counter()
+        emit_event(config, {"type": "api_call", "tool": tool_name})
         flight_candidates = search_transit(start_airport_city, end_airport_city, date)
         dur = time.perf_counter() - start_time
         log_dev(config, f"[Latency Metric] Flight search ({start_airport_city} -> {end_airport_city}): {dur:.2f}s")
@@ -331,6 +335,7 @@ def resolve_hop_segments(
                 if alt_city.lower().strip() != end_airport_city.lower().strip() and alt_city.lower().strip() != start_airport_city.lower().strip():
                     log_agent(config, f"I'm checking a connection via {alt_city} instead...")
                     start_time = time.perf_counter()
+                    emit_event(config, {"type": "api_call", "tool": tool_name})
                     alt_candidates = search_transit(start_airport_city, alt_city, date)
                     dur = time.perf_counter() - start_time
                     log_dev(config, f"[Latency Metric] Flight search ({start_airport_city} -> {alt_city}): {dur:.2f}s")
@@ -382,11 +387,13 @@ def resolve_hop_segments(
             # We found flights! Let's calculate total flight path duration
             start_road_dur = 0
             if needs_start_road:
+                emit_event(config, {"type": "api_call", "tool": "Google Maps"})
                 start_road_route = get_route_directions(start_city, start_airport_city, "driving")
                 start_road_dur = start_road_route.get("duration_minutes", 120)
                 
             end_road_dur = 0
             if needs_end_road:
+                emit_event(config, {"type": "api_call", "tool": "Google Maps"})
                 end_road_route = get_route_directions(end_airport_city, end_city, "driving")
                 end_road_dur = end_road_route.get("duration_minutes", 120)
                 
