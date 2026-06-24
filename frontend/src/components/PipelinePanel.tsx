@@ -590,7 +590,7 @@ export default function PipelinePanel({ activeNode, phase, candidates, logs, act
             </svg>
           </div>
           <div>
-            <span className="pipeline-header-title">NomadGraph</span>
+            <span className="pipeline-header-title">OdysseyAI</span>
             <span className="pipeline-header-sub"> Pipeline</span>
           </div>
         </div>

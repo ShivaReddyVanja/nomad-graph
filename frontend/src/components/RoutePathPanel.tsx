@@ -49,7 +49,7 @@ export default function RoutePathPanel({ itinerary }: RoutePathPanelProps) {
           </div>
           <h3>Interactive Route Map</h3>
           <p>
-            Once NomadGraph compiles your itinerary, a beautiful illustrative travel map
+            Once OdysseyAI compiles your itinerary, a beautiful illustrative travel map
             of your journey will be plotted here.
           </p>
           <div className="route-path-empty-preview">

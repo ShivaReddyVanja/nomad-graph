@@ -274,14 +274,14 @@ export default function ChatPanel({
       {/* ── Messages Area ── */}
       <div className="chat-messages">
         {logs.length === 0 ? (
-          /* Empty state — matches the NomadGraph console aesthetic */
+          /* Empty state — matches the OdysseyAI console aesthetic */
           <div className="chat-empty-state">
             <div className="chat-empty-sparkle">
               <SparkleIcon />
             </div>
             <h3 className="chat-empty-title">Design Your Expedition</h3>
             <p className="chat-empty-desc">
-              Describe your ideal journey. The NomadGraph swarm will autonomously research, plan, and orchestrate a comprehensive itinerary.
+              Describe your ideal journey. The OdysseyAI swarm will autonomously research, plan, and orchestrate a comprehensive itinerary.
             </p>
             <p className="chat-suggestions-label">Suggested Prompts</p>
             <div className="chat-suggestions-list">
