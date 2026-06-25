@@ -49,6 +49,7 @@ Thumbs.db
 # travel-agents cache files
 backend/*_cache.json
 backend/cache/
+cache/
 
 # Scratch files
 backend/scratch/
