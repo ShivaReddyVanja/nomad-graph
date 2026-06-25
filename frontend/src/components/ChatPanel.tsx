@@ -17,6 +17,7 @@ interface ChatPanelProps {
   startPlanning: (prompt: string) => void;
   submitClarification: (answers: Record<string, string>) => void;
   reset: () => void;
+  totalGenerated: number;
 }
 
 interface GroupedMessage {
@@ -84,7 +85,6 @@ const QUICK_SUGGESTIONS = [
   "Plan a 5-day cultural trip to Rome on a mid-range budget.",
   "3 days in Paris focused on food and museums, luxury stay.",
   "Weekend in Delhi — budget travel, local street food focus.",
-  "A relaxing week in Bali, emphasizing wellness and nature.",
 ];
 
 const AGENT_NAMES: Record<string, string> = {
@@ -111,6 +111,7 @@ export default function ChatPanel({
   startPlanning,
   submitClarification,
   reset,
+  totalGenerated,
 }: ChatPanelProps) {
   const [inputPrompt, setInputPrompt] = useState("");
   const [inputFocused, setInputFocused] = useState(false);
@@ -220,34 +221,16 @@ export default function ChatPanel({
 
   return (
     <div className="chat-panel" style={{ position: "relative" }}>
-      {/* Visual Plug Connector in the middle of the left border */}
+      {/* Visual Plug Connector */}
       <div
         id="chat-input-plug-connector"
-        className="chat-plug-connector"
-        style={{
-          position: "absolute",
-          left: "-8px",
-          top: "50%",
-          transform: "translateY(-50%)",
-          width: "16px",
-          height: "20px",
-          backgroundColor: "#1e293b",
-          borderRadius: "3px 0 0 3px",
-          borderLeft: "2px solid #38bdf8",
-          boxShadow: phase !== "idle"
-            ? "0 0 10px rgba(56, 189, 248, 0.7), 0 0 20px rgba(244, 63, 94, 0.4)"
-            : "0 0 6px rgba(56, 189, 248, 0.3)",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          zIndex: 1000,
-          transition: "box-shadow 0.3s",
-        }}
+        className={`chat-plug-connector ${phase === "idle" ? "state-idle" : "state-active"}`}
       >
         {/* Double pins inside plug */}
-        <div style={{ width: "4px", height: "2px", backgroundColor: "#94a3b8", borderRadius: "1px 0 0 1px", marginBottom: "2px" }} />
-        <div style={{ width: "4px", height: "2px", backgroundColor: "#94a3b8", borderRadius: "1px 0 0 1px" }} />
+        <div className="chat-plug-connector-pins">
+          <div className="chat-plug-connector-pin" />
+          <div className="chat-plug-connector-pin" />
+        </div>
       </div>
 
       {/* ── Header ── */}
@@ -257,7 +240,37 @@ export default function ChatPanel({
             <TerminalIcon />
           </div>
           <div>
-            <div className="chat-header-title">Interaction Console</div>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <div className="chat-header-title">Interaction Console</div>
+              {totalGenerated > 0 && (
+                <span
+                  style={{
+                    fontSize: "10px",
+                    backgroundColor: "rgba(35, 131, 226, 0.08)",
+                    color: "#2383e2",
+                    padding: "2px 8px",
+                    borderRadius: "12px",
+                    fontWeight: 600,
+                    border: "1px solid rgba(35, 131, 226, 0.15)",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "4px",
+                    animation: "fadeIn 0.3s ease-in-out",
+                  }}
+                >
+                  <span
+                    style={{
+                      width: "5px",
+                      height: "5px",
+                      borderRadius: "50%",
+                      backgroundColor: "#2383e2",
+                      display: "inline-block",
+                    }}
+                  />
+                  {totalGenerated} {totalGenerated === 1 ? "journey" : "journeys"} designed
+                </span>
+              )}
+            </div>
             <div className="chat-header-sub">
               {phase === "idle" ? "Awaiting Instructions" : "Planning in progress…"}
             </div>
@@ -707,53 +720,92 @@ export default function ChatPanel({
 
       {/* ── Premium Input Bar ── */}
       <div className="chat-input-bar">
-        <div
-          className={`chat-input-wrap ${inputFocused || inputPrompt ? "chat-input-wrap--focused" : ""}`}
-        >
-
-          <textarea
-            ref={textareaRef}
-            className="chat-input-textarea"
-            disabled={isBusy}
-            value={inputPrompt}
-            onChange={(e) => setInputPrompt(e.target.value)}
-            onKeyDown={handleKeyDown}
-            onFocus={() => setInputFocused(true)}
-            onBlur={() => setInputFocused(false)}
-            placeholder={
-              isBusy
-                ? "Planning in progress…"
-                : "E.g., Plan a 3-day trip to Tokyo focused on street food and temples…"
-            }
-            rows={1}
-          />
+        {phase === "completed" ? (
           <button
-            className={`chat-send-btn-new ${canSend ? "chat-send-btn-new--active" : ""}`}
-            onClick={handleSubmitPrompt}
-            disabled={!canSend}
-            aria-label="Send"
+            onClick={reset}
+            className="plan-another-btn"
+            style={{
+              width: "100%",
+              height: "44px",
+              borderRadius: "12px",
+              background: "#1e293b",
+              color: "#ffffff",
+              fontWeight: 600,
+              fontSize: "13px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "8px",
+              boxShadow: "0 4px 12px rgba(15, 23, 42, 0.15)",
+              border: "1.5px solid #0f172a",
+              cursor: "pointer",
+              transition: "transform 0.1s, background-color 0.2s",
+            }}
+            onMouseOver={(e) => {
+              e.currentTarget.style.background = "#0f172a";
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.background = "#1e293b";
+            }}
+            onMouseDown={(e) => {
+              e.currentTarget.style.transform = "scale(0.98)";
+            }}
+            onMouseUp={(e) => {
+              e.currentTarget.style.transform = "scale(1)";
+            }}
           >
-            <SendIcon active={canSend} />
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
+            </svg>
+            Plan Another Trip
           </button>
-        </div>
+        ) : (
+          <>
+            <div
+              className={`chat-input-wrap ${inputFocused || inputPrompt ? "chat-input-wrap--focused" : ""}`}
+            >
+              <textarea
+                ref={textareaRef}
+                className="chat-input-textarea"
+                disabled={isBusy}
+                value={inputPrompt}
+                onChange={(e) => setInputPrompt(e.target.value)}
+                onKeyDown={handleKeyDown}
+                onFocus={() => setInputFocused(true)}
+                onBlur={() => setInputFocused(false)}
+                placeholder={
+                  isBusy
+                    ? "Planning in progress…"
+                    : "E.g., Plan a 3-day trip to Tokyo focused on street food and temples…"
+                }
+                rows={1}
+              />
+              <button
+                className={`chat-send-btn-new ${canSend ? "chat-send-btn-new--active" : ""}`}
+                onClick={handleSubmitPrompt}
+                disabled={!canSend}
+                aria-label="Send"
+              >
+                <SendIcon active={canSend} />
+              </button>
+            </div>
 
-        <div className="chat-input-footer">
-          <div className="chat-input-footer-left">
-            <span className="chat-model-badge">
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-              </svg>
-              Gemini
-            </span>
-            <span className="chat-model-badge">
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><ellipse cx="12" cy="5" rx="9" ry="3" /><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" /><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" /></svg>
-              Live Data
-            </span>
-          </div>
-          <p className="chat-input-hint">
-            <kbd>Enter ↵</kbd> to dispatch · <kbd>Shift+Enter</kbd> for newline
-          </p>
-        </div>
+            <div className="chat-input-footer" style={{ justifyContent: "flex-end" }}>
+              <p className="chat-input-hint">
+                <kbd>Enter ↵</kbd> to dispatch · <kbd>Shift+Enter</kbd> for newline
+              </p>
+            </div>
+          </>
+        )}
       </div>
 
     </div>

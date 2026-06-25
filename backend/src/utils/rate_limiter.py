@@ -41,6 +41,8 @@ class RateLimiter:
             self.data["thread_ip"] = {}
         if "thread_status" not in self.data:
             self.data["thread_status"] = {}
+        if "total_generated" not in self.data:
+            self.data["total_generated"] = 0
 
     def _save(self):
         os.makedirs(self.cache_dir, exist_ok=True)
@@ -109,6 +111,11 @@ class RateLimiter:
         day_ago = now - 24 * 3600
         
         # Mark as completed
+        current_status = self.data.get("thread_status", {}).get(thread_id, "")
+        if current_status != "completed":
+            self.data["total_generated"] = self.data.get("total_generated", 0) + 1
+            print(f"[Rate Limiter] Total itineraries generated incremented to: {self.data['total_generated']}")
+
         self.set_thread_status(thread_id, "completed")
         
         history = self.data["ip_limit"].get(ip, [])
