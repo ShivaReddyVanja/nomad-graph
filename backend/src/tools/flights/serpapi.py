@@ -57,9 +57,12 @@ class SerpApiFlightProvider(FlightProvider):
                 
             flight_start = flights[0]
             flight_end = flights[-1]
-            price = flight_group.get("price", 0)
-            duration = flight_group.get("total_duration", 0)
+            price = flight_group.get("price")
+            duration = flight_group.get("total_duration")
             
+            if not price or not duration:
+                continue
+                
             transit_options.append(
                 TransitOption(
                     id=f"flight_serp_{i+1}",
@@ -68,8 +71,8 @@ class SerpApiFlightProvider(FlightProvider):
                     departure_time=flight_start.get("departure_airport", {}).get("time", "12:00"),
                     arrival_time=flight_end.get("arrival_airport", {}).get("time", "18:00"),
                     mode=TravelMode.FLIGHT,
-                    duration_minutes=duration,
-                    estimated_price=float(price) if price else None,
+                    duration_minutes=int(duration),
+                    estimated_price=int(price),
                     carrier=flight_start.get("airline", "Airline")
                 )
             )
