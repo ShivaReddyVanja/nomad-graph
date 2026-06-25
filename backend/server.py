@@ -66,6 +66,12 @@ def health_check():
     return {"status": "healthy", "service": "OdysseyAI API"}
 
 
+@app.get("/api/plan/stats")
+def get_stats():
+    """Retrieves itinerary generation statistics."""
+    return {"total_generated": rate_limiter.data.get("total_generated", 0)}
+
+
 @app.post("/api/plan/run")
 async def run_planner(run_req: RunRequest, request: Request):
     """

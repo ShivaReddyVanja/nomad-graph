@@ -26,6 +26,7 @@ export default function Home() {
     reset,
     rateLimitError,
     clearRateLimitError,
+    totalGenerated,
   } = useEventStream();
 
   const [leftTab, setLeftTab] = useState<"pipeline" | "map" | "path">("pipeline");
@@ -308,6 +309,7 @@ export default function Home() {
           startPlanning={startPlanning}
           submitClarification={submitClarification}
           reset={reset}
+          totalGenerated={totalGenerated}
         />
 
         {/* Validation warnings footer */}

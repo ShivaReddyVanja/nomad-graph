@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 
 export interface Location {
   name: string;
@@ -112,6 +112,7 @@ export function useEventStream() {
   const [destinationCard, setDestinationCard] = useState<DestinationCardData | null>(null);
   const [transitCard, setTransitCard] = useState<TransitCardData | null>(null);
   const [budgetCard, setBudgetCard] = useState<BudgetCardData | null>(null);
+  const [totalGenerated, setTotalGenerated] = useState<number>(0);
   
   const [activeNode, setActiveNode] = useState<string | null>(null);
   const [rateLimitError, setRateLimitError] = useState<string | null>(null);
@@ -129,6 +130,23 @@ export function useEventStream() {
   const [activeApiCall, setActiveApiCall] = useState<ApiCallEvent | null>(null);
 
   const abortControllerRef = useRef<AbortController | null>(null);
+
+  const fetchStats = useCallback(async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/plan/stats`);
+      if (res.ok) {
+        const data = await res.json();
+        setTotalGenerated(data.total_generated || 0);
+      }
+    } catch (err) {
+      console.error("Failed to fetch itinerary statistics:", err);
+    }
+  }, []);
+
+  // Fetch initial statistics on mount
+  useEffect(() => {
+    fetchStats();
+  }, [fetchStats]);
 
   const addLog = useCallback((text: string, type: "log" | "system" | "error" | "agent" | "user" = "log", node?: string) => {
     setLogs((prev) => [
@@ -334,6 +352,7 @@ export function useEventStream() {
         setInterruptedQuestions(null);
         addLog("Travel itinerary successfully compiled!", "system");
         setThinkingLogs([]); // Auto-close thinking drawer by clearing its logs
+        fetchStats(); // Update statistics count
         break;
 
       case "error":
@@ -393,5 +412,7 @@ export function useEventStream() {
     reset,
     rateLimitError,
     clearRateLimitError,
+    totalGenerated,
+    fetchStats,
   };
 }

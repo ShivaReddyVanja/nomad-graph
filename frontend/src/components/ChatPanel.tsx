@@ -17,6 +17,7 @@ interface ChatPanelProps {
   startPlanning: (prompt: string) => void;
   submitClarification: (answers: Record<string, string>) => void;
   reset: () => void;
+  totalGenerated: number;
 }
 
 interface GroupedMessage {
@@ -111,6 +112,7 @@ export default function ChatPanel({
   startPlanning,
   submitClarification,
   reset,
+  totalGenerated,
 }: ChatPanelProps) {
   const [inputPrompt, setInputPrompt] = useState("");
   const [inputFocused, setInputFocused] = useState(false);
@@ -257,7 +259,37 @@ export default function ChatPanel({
             <TerminalIcon />
           </div>
           <div>
-            <div className="chat-header-title">Interaction Console</div>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <div className="chat-header-title">Interaction Console</div>
+              {totalGenerated > 0 && (
+                <span
+                  style={{
+                    fontSize: "10px",
+                    backgroundColor: "rgba(35, 131, 226, 0.08)",
+                    color: "#2383e2",
+                    padding: "2px 8px",
+                    borderRadius: "12px",
+                    fontWeight: 600,
+                    border: "1px solid rgba(35, 131, 226, 0.15)",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "4px",
+                    animation: "fadeIn 0.3s ease-in-out",
+                  }}
+                >
+                  <span
+                    style={{
+                      width: "5px",
+                      height: "5px",
+                      borderRadius: "50%",
+                      backgroundColor: "#2383e2",
+                      display: "inline-block",
+                    }}
+                  />
+                  {totalGenerated} {totalGenerated === 1 ? "journey" : "journeys"} designed
+                </span>
+              )}
+            </div>
             <div className="chat-header-sub">
               {phase === "idle" ? "Awaiting Instructions" : "Planning in progress…"}
             </div>
