@@ -2,7 +2,7 @@ import uuid
 import json
 import asyncio
 from typing import Dict, Any, List, Optional, Literal
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
@@ -10,6 +10,10 @@ from langgraph.types import Command
 from src.agents.workflow import build_workflow
 from src.graph.state import FullItinerary
 from src.utils.logger import session_logger
+from src.utils.rate_limiter import RateLimiter, get_client_ip
+
+# Initialize rate limiter
+rate_limiter = RateLimiter()
 
 # Initialize FastAPI App
 app = FastAPI(
@@ -63,16 +67,25 @@ def health_check():
 
 
 @app.post("/api/plan/run")
-async def run_planner(request: RunRequest):
+async def run_planner(run_req: RunRequest, request: Request):
     """
     Initializes a new travel planning session or starts a run on a thread.
     Returns a Server-Sent Events (SSE) streaming response of agent reasoning logs.
     """
-    thread_id = request.thread_id or str(uuid.uuid4())
+    thread_id = run_req.thread_id or str(uuid.uuid4())
     config = {"configurable": {"thread_id": thread_id}}
 
+    ip = get_client_ip(request)
+    if not rate_limiter.check_rate_limit(ip):
+        raise HTTPException(
+            status_code=429,
+            detail="Rate limit reached. You can only create 2 successful itineraries every 24 hours."
+        )
+
+    rate_limiter.register_thread(thread_id, ip)
+
     initial_input = {
-        "user_prompt": request.user_prompt,
+        "user_prompt": run_req.user_prompt,
         "clarification_response": {},
         "is_validated": False,
         "transit": [],
@@ -128,6 +141,8 @@ async def run_planner(request: RunRequest):
             else:
                 values = thread_state.values
                 itinerary = values.get("final_itinerary")
+                if itinerary:
+                    rate_limiter.record_success(thread_id)
                 yield f"data: {json.dumps({
                     'type': 'completed',
                     'thread_id': thread_id,
@@ -205,6 +220,8 @@ async def resume_planner(request: ResumeRequest):
             else:
                 values = new_state.values
                 itinerary = values.get("final_itinerary")
+                if itinerary:
+                    rate_limiter.record_success(request.thread_id)
                 yield f"data: {json.dumps({
                     'type': 'completed',
                     'thread_id': request.thread_id,

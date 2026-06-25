@@ -24,6 +24,8 @@ export default function Home() {
     startPlanning,
     submitClarification,
     reset,
+    rateLimitError,
+    clearRateLimitError,
   } = useEventStream();
 
   const [leftTab, setLeftTab] = useState<"pipeline" | "map" | "path">("pipeline");
@@ -383,6 +385,35 @@ export default function Home() {
           </mask>
         </defs>
       </svg>
+
+      {/* Rate Limit Modal Popup Overlay */}
+      {rateLimitError && (
+        <div className="rate-limit-modal-overlay">
+          <div className="rate-limit-modal-card">
+            <div className="rate-limit-modal-icon">
+              <svg
+                width="28"
+                height="28"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" y1="8" x2="12" y2="12" />
+                <line x1="12" y1="16" x2="12.01" y2="16" />
+              </svg>
+            </div>
+            <h2 className="rate-limit-modal-title">Rate Limit Exceeded</h2>
+            <p className="rate-limit-modal-desc">{rateLimitError}</p>
+            <button className="rate-limit-modal-btn" onClick={clearRateLimitError}>
+              Dismiss
+            </button>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
