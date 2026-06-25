@@ -18,7 +18,8 @@ cd ~/odyssey-ai
 
 # 1. Pull latest code from main
 echo "Pulling latest updates from main..."
-git pull origin main
+git fetch origin main
+git reset --hard origin/main
 
 # 2. Update Backend Virtual Env & Dependencies
 echo "Updating backend Python virtual environment..."
