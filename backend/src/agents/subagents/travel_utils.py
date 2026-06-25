@@ -303,6 +303,7 @@ def resolve_hop_segments(
         start_airport_city = start_city
         start_iata = get_airport_code(start_city)
         
+    end_candidates = []
     try:
         end_candidates = resolve_nearest_airports(end_city)
         end_airport_info = select_best_airport(

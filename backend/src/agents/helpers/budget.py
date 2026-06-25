@@ -8,8 +8,8 @@ def parse_budget_level_to_inr(budget_str: str) -> Optional[float]:
     if not budget_str:
         return None
     s = budget_str.lower().strip()
-    has_k = 'k' in s
     has_lakh = 'lakh' in s or 'lac' in s
+    has_k = 'k' in s.replace('lakh', '').replace('lac', '')
     
     raw_nums = re.findall(r'\b\d+(?:\.\d+)?\b', s)
     if not raw_nums:
@@ -22,10 +22,10 @@ def parse_budget_level_to_inr(budget_str: str) -> Optional[float]:
     for num_str in raw_nums:
         try:
             val = float(num_str)
-            if val < 1000 and has_k:
-                val *= 1000
-            elif val < 100 and has_lakh:
+            if val < 100 and has_lakh:
                 val *= 100000
+            elif val < 1000 and has_k:
+                val *= 1000
             numbers.append(val)
         except ValueError:
             continue
